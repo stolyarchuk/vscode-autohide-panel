@@ -3,9 +3,16 @@
   "displayName": "vscode-autohide-panel",
   "description": "",
   "version": "0.0.1",
+  "publisher": "stolyarchuk",
+  "repository": {
+    "url": "https://github.com/stolyarchuk/vscode-autohide-panel"
+  },
   "engines": {
     "vscode": "^1.95.0"
   },
+  "extensionKind": [
+    "ui"
+  ],
   "categories": [
     "Other"
   ],
@@ -14,10 +21,27 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Auto Hide Panel",
+      "properties": {
+        "autoHide.autoHidePanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hide the panel (output, terminal, etc.) when the user clicks into a text editor."
+        },
+        "autoHide.panelDelay": {
+          "type": "number",
+          "default": 100,
+          "description": "How long to wait before hiding the panel. Same as for the side bar when the panel is on the side.  If the panel is on the bottom, there is no need for delay."
+        }
+      }
+    },
     "commands": [
       {
-        "command": "vscode-autohide-panel.helloWorld",
-        "title": "Hello World"
+        "command": "vscode-autohide-panel.toggle",
+        "category": "Auto Hide",
+        "title": "Toggle Auto Hide Side Bar for Current Workspace"
       }
     ]
   },
@@ -36,16 +60,19 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.95.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
+    "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.13.0",
-    "esbuild": "^0.24.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.6.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.13.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@vscode/vsce": "^3.2.1"
   }
 }

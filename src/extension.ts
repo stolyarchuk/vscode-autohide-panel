@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { TextEditorSelectionChangeKind } from 'vscode';
 
 class GlobalFlag {
 	private static instance: GlobalFlag;
@@ -9,6 +8,14 @@ class GlobalFlag {
 		this.flag = false;
 	}
 
+	public get(): boolean {
+		return this.flag;
+	}
+
+	public set(value: boolean): void {
+		this.flag = value;
+	}
+
 	public static getInstance(): GlobalFlag {
 		if (!GlobalFlag.instance) {
 			GlobalFlag.instance = new GlobalFlag();
@@ -16,68 +23,54 @@ class GlobalFlag {
 		return GlobalFlag.instance;
 	}
 
-	public getFlag(): boolean {
-		return this.flag;
-	}
-
-	public setFlag(value: boolean): void {
-		this.flag = value;
-	}
 }
 
-const globalFlag = GlobalFlag.getInstance();
+const isTerminalOpened = GlobalFlag.getInstance();
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log(context.extension.extensionKind);
+	const initialConfig = vscode.workspace.getConfiguration("autoHide");
 
-
-	vscode.window.onDidOpenTerminal(event => {
-		console.log("openTermian", event);
-	});
-
-	vscode.window.onDidCloseTerminal(event => {
-		console.log("closeTer", event);
-	});
-
-
-	vscode.window.onDidChangeTextEditorSelection(selection => {
-		console.log("onDidChangeTextEditorSelection");
-
-		const activeEditor = selection.textEditor;
-
-		// if (!activeEditor) { return; }
-
-		console.log("active");
-
-		const path = activeEditor.document.fileName;
-		const pathIsFile = path.includes(".") || path.includes("\\") || path.includes("/");
-		const scheme = selection.textEditor.document.uri.scheme;
-		const trigger_event = selection.kind === (TextEditorSelectionChangeKind.Mouse || TextEditorSelectionChangeKind.Keyboard);
-
-		if (trigger_event) {
-			// console.log("trigger_event");
-
+	function hideBasedOnConfig(config: vscode.WorkspaceConfiguration) {
+		if (config.autoHidePanel) {
 			setTimeout(function () {
 				vscode.commands.executeCommand("workbench.action.closePanel");
-			}, 300);
+				isTerminalOpened.set(false);
+			}, config.panelDelay);
 		}
+	}
 
+	isTerminalOpened.set(vscode.window.terminals.length > 0);
+
+	vscode.window.onDidOpenTerminal(terminal => {
+		isTerminalOpened.set(true);
 	});
 
-	vscode.window.onDidChangeActiveTextEditor(event => {
-		console.log("onDidChangeActiveTextEditor");
-
-	// event.
-
-		if (!event) {
-			console.log("yes editor");
-		} else {
-			console.log("no editor");
-		}
+	vscode.window.onDidCloseTerminal(terminal => {
+		isTerminalOpened.set(false);
 	});
 
-	vscode.workspace.onDidChangeTextDocument(handleChange => {
-		console.log("onDidChangeTextDocument", handleChange);
+	vscode.window.onDidChangeTextEditorSelection(selection => {
+		if (isTerminalOpened.get() === true) {
+			hideBasedOnConfig(vscode.workspace.getConfiguration("autoHide"));
+		};
+	});
+
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		if (isTerminalOpened.get() === true) {
+			hideBasedOnConfig(vscode.workspace.getConfiguration("autoHide"));
+		};
+	});
+
+	vscode.workspace.onDidChangeTextDocument(document => {
+		if (isTerminalOpened.get() === true) {
+			hideBasedOnConfig(vscode.workspace.getConfiguration("autoHide"));
+		};
+	});
+
+	vscode.workspace.onDidOpenTextDocument(document => {
+		if (isTerminalOpened.get() === true) {
+			hideBasedOnConfig(vscode.workspace.getConfiguration("autoHide"));
+		};
 	});
 }
 
